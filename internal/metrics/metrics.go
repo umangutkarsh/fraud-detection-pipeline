@@ -1,6 +1,8 @@
 package metrics
 
 import (
+	"sync"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
@@ -49,10 +51,29 @@ var (
 		},
 	)
 
-	IngestQueueDepth = promauto.NewGauge(
-		prometheus.GaugeOpts{
-			Name: "txn_ingest_queue_depth",
-			Help: "Current buffered length of the ingestion channel.",
-		},
-	)
+	// IngestQueueDepth = promauto.NewGauge(
+	// 	prometheus.GaugeOpts{
+	// 		Name: "txn_ingest_queue_depth",
+	// 		Help: "Current buffered length of the ingestion channel.",
+	// 	},
+	// )
 )
+
+var queueDepthOnce sync.Once
+
+
+// RegisterIngestQueueDepth exposes the live depth of a queue. Prometheus
+// calls depth() at scrape time, so the reading is always fresh.
+func RegisterIngestQueueDepth(depth func() float64, capacity func() float64) {
+	queueDepthOnce.Do(func() {
+		promauto.NewGaugeFunc(prometheus.GaugeOpts{
+			Name: "txn_ingest_queue_depth",
+			Help: "Messages waiting in the ingest channel.",
+		}, depth)
+
+		promauto.NewGaugeFunc(prometheus.GaugeOpts{
+			Name: "txn_ingest_queue_capacity",
+			Help: "Capacity of the ingest channel.",
+		}, capacity)
+	})
+}

@@ -2,7 +2,6 @@ package pipeline
 
 import (
 	"log"
-	"time"
 
 	"github.com/segmentio/kafka-go"
 
@@ -42,22 +41,22 @@ func (p *Pipeline) updateConsumerLag() {
 	pipelinemetrics.ConsumerLag.Set(float64(lag))
 }
 
-func (p *Pipeline) reportQueueDepth() {
-	ticker := time.NewTicker(2 * time.Second)
-	defer ticker.Stop()
+// func (p *Pipeline) reportQueueDepth() {
+// 	ticker := time.NewTicker(2 * time.Second)
+// 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			pipelinemetrics.IngestQueueDepth.Set(
-				float64(len(p.ingestChan)),
-			)
+// 	for {
+// 		select {
+// 		case <-ticker.C:
+// 			pipelinemetrics.IngestQueueDepth.Set(
+// 				float64(len(p.ingestChan)),
+// 			)
 
-		case <-p.ctx.Done():
-			return
-		}
-	}
-}
+// 		case <-p.ctx.Done():
+// 			return
+// 		}
+// 	}
+// }
 
 func (p *Pipeline) commit(message kafka.Message) {
 	p.commitMu.Lock()

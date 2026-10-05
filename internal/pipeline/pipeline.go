@@ -7,6 +7,8 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
+
+	pipelinemetrics "fraud-detection-pipeline/internal/metrics"
 )
 
 type Pipeline struct {
@@ -62,7 +64,7 @@ func NewPipeline(
 		},
 	)
 
-	return &Pipeline{
+	p := &Pipeline{
 		reader:      reader,
 		writer:      writer,
 		rdb:         redisClient,
@@ -72,11 +74,18 @@ func NewPipeline(
 		ctx:         ctx,
 		cancel:      cancel,
 	}
+
+	pipelinemetrics.RegisterIngestQueueDepth(
+		func() float64 { return float64(len(p.ingestChan)) },
+		func() float64 { return float64(cap(p.ingestChan)) },
+	)
+
+	return p
 }
 
 func (p *Pipeline) Start() {
 	go p.fetchLoop()
-	go p.reportQueueDepth()
+	// go p.reportQueueDepth()
 
 	p.resultWG.Add(1)
 	go p.resultProcessor()
