@@ -4,6 +4,7 @@ import (
 	"context"
 	"fraud-detection-pipeline/internal/domain"
 	"sync"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
@@ -48,6 +49,11 @@ func NewPipeline(
 			StartOffset: kafka.LastOffset,
 			MinBytes:    1,
 			MaxBytes:    10e6,
+			// Commit offsets in the background once a second instead of one
+			// synchronous broker round trip per message. Offsets are still only
+			// committed after processing (at-least-once); anything redelivered
+			// after a crash is dropped by the Redis idempotency guard.
+			CommitInterval: time.Second,
 		},
 	)
 
@@ -56,6 +62,9 @@ func NewPipeline(
 		Topic:        outputTopic,
 		Balancer:     &kafka.Hash{},
 		RequiredAcks: kafka.RequireAll,
+		// The default 1s batch timeout made every quarantine write wait up to
+		// a second; the result processor now batches, so flush quickly.
+		BatchTimeout: 10 * time.Millisecond,
 	}
 
 	redisClient := redis.NewClient(

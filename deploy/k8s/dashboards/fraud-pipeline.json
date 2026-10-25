@@ -93,7 +93,7 @@
     {
       "id": 3,
       "type": "timeseries",
-      "title": "Consumer lag (per replica)",
+      "title": "Consumer lag (messages behind, per replica)",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -117,7 +117,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "txn_consumer_lag_estimate",
+          "expr": "sum by (instance) (txn_consumer_lag_estimate)",
           "legendFormat": "{{instance}}"
         }
       ]

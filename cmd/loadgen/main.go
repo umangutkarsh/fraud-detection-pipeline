@@ -28,7 +28,7 @@ func main() {
 	topic := flag.String("topic", "transactions", "Kafka topic to publish to")
 	rate := flag.Int("rate", 1000, "target transactions per second")
 	duration := flag.Duration("duration", 60*time.Second, "how long to run (0 = until interrupted)")
-	users := flag.Int("users", 10000, "number of distinct synthetic users")
+	users := flag.Int("users", 1_000_000, "number of distinct synthetic users (too few makes the 2s velocity rule fire constantly)")
 	suspicious := flag.Float64("suspicious", 0.05, "fraction of high-value / cross-border transactions")
 	batch := flag.Int("batch", 200, "messages per Kafka write")
 	flag.Parse()

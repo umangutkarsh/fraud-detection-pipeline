@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"log"
+	"strconv"
 
 	"github.com/segmentio/kafka-go"
 
@@ -28,17 +29,26 @@ func (p *Pipeline) fetchLoop() {
 			return
 		}
 
-		p.updateConsumerLag()
+		recordConsumerLag(message)
 	}
 }
 
-func (p *Pipeline) updateConsumerLag() {
-	lag, err := p.reader.ReadLag(p.ctx)
-	if err != nil {
+// recordConsumerLag derives lag from the high-water mark that Kafka returns
+// with every fetch. (Reader.ReadLag is not available with consumer groups and
+// would cost a broker round trip per message.)
+func recordConsumerLag(message kafka.Message) {
+	if message.HighWaterMark <= 0 {
 		return
 	}
 
-	pipelinemetrics.ConsumerLag.Set(float64(lag))
+	lag := message.HighWaterMark - message.Offset - 1
+	if lag < 0 {
+		lag = 0
+	}
+
+	pipelinemetrics.ConsumerLag.
+		WithLabelValues(strconv.Itoa(message.Partition)).
+		Set(float64(lag))
 }
 
 // func (p *Pipeline) reportQueueDepth() {

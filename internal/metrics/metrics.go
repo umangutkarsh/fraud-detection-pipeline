@@ -44,11 +44,14 @@ var (
 		},
 	)
 
-	ConsumerLag = promauto.NewGauge(
+	// Per-partition lag, from the high-water mark Kafka returns with each
+	// fetched message (no extra broker call). Sum by instance for a replica.
+	ConsumerLag = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "txn_consumer_lag_estimate",
-			Help: "Approximate Kafka consumer lag.",
+			Help: "Messages behind the partition high-water mark, per partition.",
 		},
+		[]string{"partition"},
 	)
 
 	// IngestQueueDepth = promauto.NewGauge(
@@ -60,7 +63,6 @@ var (
 )
 
 var queueDepthOnce sync.Once
-
 
 // RegisterIngestQueueDepth exposes the live depth of a queue. Prometheus
 // calls depth() at scrape time, so the reading is always fresh.
