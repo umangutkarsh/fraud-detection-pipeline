@@ -5,12 +5,16 @@ FROM golang:1.24-alpine AS build
 WORKDIR /src
 
 COPY go.mod go.sum ./
-RUN go mod download
+# Retry flaky downloads; the cache mount keeps modules already fetched between attempts and builds
+RUN --mount=type=cache,target=/go/pkg/mod \
+    for i in 1 2 3 4 5; do go mod download && exit 0; echo "go mod download failed, retry $i"; sleep 5; done; exit 1
 
 COPY . .
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
-RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
     go build -trimpath -ldflags="-s -w" -o /out/fraud-processor ./cmd/fraud-processor && \
     CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
     go build -trimpath -ldflags="-s -w" -o /out/loadgen ./cmd/loadgen
