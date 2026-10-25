@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  # Docker's DNS returns one A record per fraud-processor replica.
+  - job_name: fraud-processor
+    dns_sd_configs:
+      - names: ["fraud-processor"]
+        type: A
+        port: 2112

@@ -50,6 +50,11 @@ func main() {
 func startMetricsServer(address string) {
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", promhttp.Handler())
+	// Liveness/readiness endpoint for Kubernetes probes.
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("ok"))
+	})
 
 	server := &http.Server{
 		Addr:    address,

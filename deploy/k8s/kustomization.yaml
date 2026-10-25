@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: fraud
+
+resources:
+  - namespace.yaml
+  - kafka.yaml
+  - redis.yaml
+  - fraud-processor.yaml
+  - servicemonitor.yaml
+
+configMapGenerator:
+  # Picked up by the Grafana sidecar in kube-prometheus-stack.
+  - name: fraud-pipeline-dashboard
+    files:
+      - dashboards/fraud-pipeline.json
+    options:
+      disableNameSuffixHash: true
+      labels:
+        grafana_dashboard: "1"
+
+# CI replaces this with the ECR image built for the current commit.
+images:
+  - name: fraud-processor
+    newName: fraud-processor
+    newTag: latest
