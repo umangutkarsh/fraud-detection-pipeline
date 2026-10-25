@@ -1,0 +1,8 @@
+# cp terraform.tfvars.example terraform.tfvars
+region                 = "eu-west-2"
+cluster_name           = "fraud-pipeline"
+github_repository      = "umangutkarsh/fraud-detection-pipeline"
+grafana_admin_password = "change-me"
+
+# If your AWS account already has the GitHub OIDC provider:
+# create_github_oidc_provider = false

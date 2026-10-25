@@ -1,0 +1,23 @@
+# kubectl -n fraud apply -f deploy/k8s/loadtest/loadgen-job.yaml
+# (CI/README substitutes IMAGE with the ECR image for the current commit.)
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: loadgen
+  namespace: fraud
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: loadgen
+          image: IMAGE
+          command: ["/usr/local/bin/loadgen"]
+          args:
+            - -brokers=kafka-0.kafka.fraud.svc.cluster.local:9092
+            - -rate=5000
+            - -duration=5m
+          resources:
+            requests: { cpu: 500m, memory: 128Mi }

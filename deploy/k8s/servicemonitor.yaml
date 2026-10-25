@@ -1,0 +1,12 @@
+# Requires the Prometheus Operator CRDs (installed by kube-prometheus-stack).
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: fraud-processor
+  labels: { app: fraud-processor }
+spec:
+  selector:
+    matchLabels: { app: fraud-processor }
+  endpoints:
+    - port: metrics
+      interval: 15s
